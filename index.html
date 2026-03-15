@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guodong Ding | NUS CVML</title>
+<style>
+  :root {
+    --bg: #060b18;
+    --bg2: #0d1526;
+    --cyan: #00f5ff;
+    --purple: #a855f7;
+    --blue: #3b82f6;
+    --gold: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(0,245,255,0.12);
+    --glow: 0 0 20px rgba(0,245,255,0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── Canvas background ── */
+  #canvas-bg {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none; opacity: 0.35;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 2.5rem;
+    background: rgba(6,11,24,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-weight: 700; font-size: 1.1rem;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: 0.03em;
+  }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cyan); }
+
+  /* ── Hero ── */
+  #hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8rem 2rem 4rem;
+  }
+  .hero-inner {
+    max-width: 960px; width: 100%;
+    display: flex; align-items: center; gap: 4rem;
+    flex-wrap: wrap;
+  }
+  .avatar-wrap {
+    flex-shrink: 0;
+    position: relative;
+  }
+  .avatar {
+    width: 160px; height: 160px; border-radius: 50%;
+    background: linear-gradient(135deg, #0f2345, #1a1040);
+    border: 2px solid var(--cyan);
+    box-shadow: var(--glow), 0 0 60px rgba(168,85,247,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    position: relative; overflow: hidden;
+  }
+  .avatar::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #0a1628 60%, #150d2e);
+    border-radius: 50%;
+    z-index: -1;
+  }
+  .avatar-ring {
+    position: absolute; inset: -8px; border-radius: 50%;
+    border: 1px solid transparent;
+    background: linear-gradient(var(--bg), var(--bg)) padding-box,
+                linear-gradient(135deg, var(--cyan), var(--purple), var(--cyan)) border-box;
+    animation: spin 8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hero-text { flex: 1; min-width: 280px; }
+  .hero-text h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800; line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, var(--cyan) 70%, var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .hero-subtitle {
+    color: var(--cyan); font-size: 1.05rem; font-weight: 500;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.02em;
+  }
+  .hero-affil {
+    color: var(--muted); font-size: 0.95rem; margin-bottom: 1.2rem;
+  }
+  .hero-tagline {
+    color: var(--text); font-size: 1rem;
+    border-left: 2px solid var(--purple);
+    padding-left: 1rem; margin-bottom: 1.8rem;
+    font-style: italic; opacity: 0.85;
+  }
+  .social-links { display: flex; gap: 0.9rem; flex-wrap: wrap; }
+  .social-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.45rem 1.1rem; border-radius: 999px;
+    font-size: 0.85rem; font-weight: 600; text-decoration: none;
+    transition: all 0.2s; cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  .social-btn.primary {
+    background: linear-gradient(135deg, rgba(0,245,255,0.12), rgba(168,85,247,0.12));
+    color: var(--cyan);
+    border-color: var(--cyan);
+  }
+  .social-btn.primary:hover {
+    background: linear-gradient(135deg, rgba(0,245,255,0.22), rgba(168,85,247,0.22));
+    box-shadow: 0 0 16px rgba(0,245,255,0.3);
+  }
+  .social-btn.secondary {
+    background: var(--card); color: var(--muted);
+  }
+  .social-btn.secondary:hover { color: var(--text); border-color: var(--purple); }
+
+  /* ── Sections ── */
+  section {
+    position: relative; z-index: 1;
+    max-width: 960px; margin: 0 auto;
+    padding: 5rem 2rem;
+  }
+  .section-title {
+    font-size: 1.6rem; font-weight: 700;
+    margin-bottom: 2.5rem;
+    display: flex; align-items: center; gap: 0.8rem;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+  .section-title span {
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  /* ── About ── */
+  #about .about-text p {
+    color: var(--muted); margin-bottom: 1rem; font-size: 0.97rem;
+  }
+  .interest-tags { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }
+  .tag {
+    padding: 0.35rem 0.9rem; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 500;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+  }
+
+  /* ── News ── */
+  .news-list { display: flex; flex-direction: column; gap: 1rem; }
+  .news-item {
+    display: flex; gap: 1.2rem; align-items: flex-start;
+    padding: 1rem 1.2rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .news-item:hover {
+    border-color: rgba(0,245,255,0.3);
+    box-shadow: var(--glow);
+  }
+  .news-date {
+    color: var(--cyan); font-size: 0.8rem; font-weight: 600;
+    white-space: nowrap; padding-top: 2px; min-width: 72px;
+  }
+  .news-content { font-size: 0.9rem; color: var(--text); }
+  .news-content strong { color: var(--cyan); }
+  .venue-badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem; border-radius: 4px;
+    font-size: 0.72rem; font-weight: 700;
+    margin-left: 0.4rem; vertical-align: middle;
+  }
+  .badge-top { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-journal { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  .badge-conf { background: rgba(168,85,247,0.12); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+
+  /* ── Publications ── */
+  .pub-year-group { margin-bottom: 2.5rem; }
+  .pub-year {
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--cyan); margin-bottom: 1rem;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .pub-year::after { content: ''; flex:1; height:1px; background: var(--border); }
+  .pub-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+    margin-bottom: 0.8rem;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+  .pub-card:hover {
+    border-color: rgba(0,245,255,0.25);
+    transform: translateX(4px);
+  }
+  .pub-title {
+    font-size: 0.95rem; font-weight: 600; color: var(--text);
+    margin-bottom: 0.35rem; line-height: 1.4;
+  }
+  .pub-authors { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.3rem; }
+  .pub-authors .me { color: var(--cyan); font-weight: 600; }
+  .pub-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .pub-links { margin-left: auto; display: flex; gap: 0.5rem; }
+  .pub-link {
+    font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;
+    text-decoration: none; font-weight: 600;
+    background: rgba(0,245,255,0.08); color: var(--cyan);
+    border: 1px solid rgba(0,245,255,0.2);
+    transition: all 0.15s;
+  }
+  .pub-link:hover { background: rgba(0,245,255,0.18); }
+
+  /* ── Contact ── */
+  .contact-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.2rem;
+  }
+  .contact-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+    transition: border-color 0.2s;
+  }
+  .contact-card:hover { border-color: rgba(168,85,247,0.4); }
+  .contact-card .icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
+  .contact-card .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .contact-card .value { font-size: 0.95rem; color: var(--text); margin-top: 0.2rem; word-break: break-all; }
+  .contact-card a { color: var(--cyan); text-decoration: none; }
+  .contact-card a:hover { text-decoration: underline; }
+
+  /* ── Footer ── */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center; padding: 2.5rem;
+    color: var(--muted); font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Scroll animation ── */
+  .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
+  .fade-in.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 640px) {
+    .hero-inner { flex-direction: column; align-items: center; text-align: center; gap: 2rem; }
+    .hero-tagline { text-align: left; }
+    nav { padding: 1rem 1.2rem; }
+    .nav-links { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">Guodong Ding</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#news">News</a></li>
+    <li><a href="#publications">Papers</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="avatar-wrap">
+      <div class="avatar-ring"></div>
+      <div class="avatar">GD</div>
+    </div>
+    <div class="hero-text">
+      <h1>Guodong Ding</h1>
+      <div class="hero-subtitle">Postdoctoral Researcher · NUS CVML</div>
+      <div class="hero-affil">School of Computing · National University of Singapore</div>
+      <div class="hero-tagline">
+        Teaching machines to understand what humans do — frame by frame, action by action.
+      </div>
+      <div class="social-links">
+        <a href="#" class="social-btn primary">📄 Google Scholar</a>
+        <a href="#" class="social-btn secondary">💻 GitHub</a>
+        <a href="#" class="social-btn secondary">🎓 DBLP</a>
+        <a href="mailto:guodong@comp.nus.edu.sg" class="social-btn secondary">✉️ Email</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section id="about">
+  <h2 class="section-title"><span>About</span></h2>
+  <div class="about-text fade-in">
+    <p>
+      I am a Postdoctoral Researcher at the <strong>Computer Vision &amp; Machine Learning (CVML) Lab</strong>, 
+      National University of Singapore, working on the frontiers of video understanding and human action analysis. 
+      My research focuses on enabling machines to parse complex, temporally extended human activities 
+      from videos — with implications for robotics, healthcare, and industrial automation.
+    </p>
+    <p>
+      My primary research thrust is <strong>Temporal Action Segmentation</strong>: how to accurately decompose 
+      untrimmed procedural videos into meaningful action segments. I have published extensively at 
+      top venues including CVPR, NeurIPS, ECCV, and IEEE TPAMI, contributing both foundational analyses 
+      and novel frameworks (online, incremental, semi-supervised) for this challenging problem.
+    </p>
+    <p>
+      Beyond action segmentation, I am passionate about <strong>medical video analysis</strong> (coronary 
+      angiography, surgical workflow), <strong>dataset efficiency</strong> via generative models, and 
+      <strong>multimodal reasoning</strong>. I believe elegant models with strong temporal inductive biases 
+      are the key to robust video intelligence.
+    </p>
+    <div class="interest-tags">
+      <span class="tag">Temporal Action Segmentation</span>
+      <span class="tag">Video Understanding</span>
+      <span class="tag">Action Recognition</span>
+      <span class="tag">Semi-supervised Learning</span>
+      <span class="tag">Medical Video Analysis</span>
+      <span class="tag">Generative Models</span>
+      <span class="tag">Person Re-ID</span>
+      <span class="tag">Scene Text Spotting</span>
+    </div>
+  </div>
+</section>
+
+<!-- News -->
+<section id="news">
+  <h2 class="section-title"><span>News</span></h2>
+  <div class="news-list fade-in">
+    <div class="news-item">
+      <div class="news-date">Mar 2025</div>
+      <div class="news-content">
+        Paper accepted at <strong>CVPR 2025</strong>:
+        <em>"Condensing Action Segmentation Datasets via Generative Network Inversion"</em>
+        <span class="venue-badge badge-top">CVPR</span>
+      </div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">Jan 2025</div>
+      <div class="news-content">
+        Paper accepted at <strong>MICCAI 2025</strong>:
+        <em>"Contrastive Masked Video Modeling for Coronary Angiography Diagnosis"</em>
+        <span class="venue-badge badge-conf">MICCAI</span>
+      </div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">Dec 2024</div>
+      <div class="news-content">
+        Paper accepted at <strong>NeurIPS 2024</strong>:
+        <em>"OnlineTAS: An Online Baseline for Temporal Action Segmentation"</em>
+        <span class="venue-badge badge-top">NeurIPS</span>
+      </div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">Jun 2024</div>
+      <div class="news-content">
+        Survey published in <strong>IEEE TPAMI 2024</strong>:
+        <em>"Temporal Action Segmentation: An Analysis of Modern Techniques"</em>
+        <span class="venue-badge badge-journal">TPAMI</span>
+      </div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">Mar 2024</div>
+      <div class="news-content">
+        Paper accepted at <strong>CVPR 2024</strong>:
+        <em>"Coherent Temporal Synthesis for Incremental Action Segmentation"</em>
+        <span class="venue-badge badge-top">CVPR</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Publications -->
+<section id="publications">
+  <h2 class="section-title"><span>Publications</span></h2>
+  <div class="fade-in">
+
+    <div class="pub-year-group">
+      <div class="pub-year">2025</div>
+      <div class="pub-card">
+        <div class="pub-title">Condensing Action Segmentation Datasets via Generative Network Inversion</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span> et al.</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-top">CVPR 2025</span>
+          <div class="pub-links"><a class="pub-link" href="#">arXiv</a><a class="pub-link" href="#">Paper</a></div>
+        </div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-title">Contrastive Masked Video Modeling for Coronary Angiography Diagnosis</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span> et al.</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-conf">MICCAI 2025</span>
+          <div class="pub-links"><a class="pub-link" href="#">Paper</a></div>
+        </div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-title">Spatial and Temporal Beliefs for Mistake Detection in Assembly Tasks</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span> et al.</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-journal">CVIU 2025</span>
+          <div class="pub-links"><a class="pub-link" href="#">Paper</a></div>
+        </div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-title">A Temporal Modeling Framework for Video Pre-Training on Video Instance Segmentation</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span> et al.</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-conf">ICME 2025</span>
+          <div class="pub-links"><a class="pub-link" href="#">arXiv</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2024</div>
+      <div class="pub-card">
+        <div class="pub-title">Temporal Action Segmentation: An Analysis of Modern Techniques</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span>, Angela Yao</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-journal">IEEE TPAMI 2024</span>
+          <div class="pub-links"><a class="pub-link" href="#">Paper</a><a class="pub-link" href="#">PDF</a></div>
+        </div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-title">OnlineTAS: An Online Baseline for Temporal Action Segmentation</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span> et al.</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-top">NeurIPS 2024</span>
+          <div class="pub-links"><a class="pub-link" href="#">arXiv</a><a class="pub-link" href="#">Code</a></div>
+        </div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-title">Coherent Temporal Synthesis for Incremental Action Segmentation</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span> et al.</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-top">CVPR 2024</span>
+          <div class="pub-links"><a class="pub-link" href="#">Paper</a><a class="pub-link" href="#">Code</a></div>
+        </div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-title">LMTextSpotter: Towards Better Scene Text Spotting with Language Modeling in Transformer</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span> et al.</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-conf">ICDAR 2024</span>
+          <div class="pub-links"><a class="pub-link" href="#">Paper</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2022 — 2023</div>
+      <div class="pub-card">
+        <div class="pub-title">Temporal Action Segmentation With High-Level Complex Activity Labels</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span>, Angela Yao</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-journal">IEEE TMM 2023</span>
+          <div class="pub-links"><a class="pub-link" href="#">Paper</a></div>
+        </div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-title">Leveraging Action Affinity and Continuity for Semi-supervised Temporal Action Segmentation</div>
+        <div class="pub-authors"><span class="me">Guodong Ding</span>, Angela Yao</div>
+        <div class="pub-meta">
+          <span class="venue-badge badge-top">ECCV 2022</span>
+          <div class="pub-links"><a class="pub-link" href="#">Paper</a><a class="pub-link" href="#">Code</a></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact">
+  <h2 class="section-title"><span>Contact</span></h2>
+  <div class="contact-grid fade-in">
+    <div class="contact-card">
+      <div class="icon">✉️</div>
+      <div class="label">Email</div>
+      <div class="value"><a href="mailto:guodong@comp.nus.edu.sg">guodong@comp.nus.edu.sg</a></div>
+    </div>
+    <div class="contact-card">
+      <div class="icon">🏢</div>
+      <div class="label">Office</div>
+      <div class="value">School of Computing, NUS<br>13 Computing Drive, Singapore 117417</div>
+    </div>
+    <div class="contact-card">
+      <div class="icon">🔬</div>
+      <div class="label">Lab</div>
+      <div class="value"><a href="https://cvml.comp.nus.edu.sg" target="_blank">CVML @ NUS</a></div>
+    </div>
+    <div class="contact-card">
+      <div class="icon">📚</div>
+      <div class="label">Google Scholar</div>
+      <div class="value"><a href="#" target="_blank">View Profile →</a></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Guodong Ding · NUS CVML · Built with 💙</p>
+</footer>
+
+<script>
+// ── Particle / neural network canvas ──
+const canvas = document.getElementById('canvas-bg');
+const ctx = canvas.getContext('2d');
+let W, H, nodes = [], edges = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initNodes() {
+  nodes = [];
+  const n = Math.min(60, Math.floor(W * H / 18000));
+  for (let i = 0; i < n; i++) {
+    nodes.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r: Math.random() * 2 + 1,
+      pulse: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const now = Date.now() * 0.001;
+
+  // Draw edges
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 160) {
+        const alpha = (1 - dist / 160) * 0.4;
+        const t = (i + j + now * 0.5) % 1;
+        const r = Math.floor(lerp(0, 168, t));
+        const g = Math.floor(lerp(245, 85, t));
+        const b = Math.floor(lerp(255, 247, t));
+        ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw nodes
+  nodes.forEach((n, i) => {
+    n.pulse += 0.02;
+    const glow = 0.5 + 0.5 * Math.sin(n.pulse);
+    const t = (i / nodes.length + now * 0.1) % 1;
+    const r = Math.floor(lerp(0, 168, t));
+    const g = Math.floor(lerp(245, 85, t));
+    const b = Math.floor(lerp(255, 247, t));
+    
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r * (0.8 + 0.4 * glow), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},${0.6 + 0.4 * glow})`;
+    ctx.fill();
+
+    // Move
+    n.x += n.vx;
+    n.y += n.vy;
+    if (n.x < 0 || n.x > W) n.vx *= -1;
+    if (n.y < 0 || n.y > H) n.vy *= -1;
+  });
+
+  requestAnimationFrame(draw);
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+resize();
+initNodes();
+draw();
+window.addEventListener('resize', () => { resize(); initNodes(); });
+
+// ── Scroll fade-in ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
